@@ -1,6 +1,5 @@
 language: python
 python:
-- "3.5"
 - "3.6"
 
 install:
@@ -16,7 +15,7 @@ install:
     - conda update -q conda
     - conda update -q --all
     - conda config --append channels conda-forge
-    - conda env create -qf test-environment.yaml;
+    - conda env create -qf test-environment.yml;
     - source activate test-environment;
 script:
     - pytest -vv --cov=./;
