@@ -9,6 +9,3 @@ def initial_conditions(temperature, grid):
         return temperature(grid)
     except TypeError:
         return temperature * np.ones(np.shape(grid))
-
-
-
