@@ -6,7 +6,3 @@ def define_grid(length_channel, number_gridpoints):
     grid_spacing = length_channel/(number_gridpoints - 1)
     positions_axial = np.linspace(0.0, length_channel, num=number_gridpoints)
     return grid_spacing, positions_axial
-
-
-if __name__ == '__main__':
-    print(define_grid(10, 11))
