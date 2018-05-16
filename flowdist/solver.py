@@ -48,6 +48,9 @@ density, viscosity, conductivity = fluid_properties(pressure, temperature, 'air'
 length_channel = 0.1
 height_channel = 0.001
 depth_channel = 0.002
+t = 0
+t_end = 10
+alpha = 0.1
 
 # Now the grid should be defined by x, y, and z position at each location in an array
 n_x = 11
@@ -78,6 +81,10 @@ u = np.ones(size)
 v = np.zeros(size)
 w = np.zeros(size)
 
+u_t = np.ones(size)
+v_t = np.zeros(size)
+w_t = np.zeros(size)
+
 u_est = np.ones(size)
 v_est = np.zeros(size)
 w_est = np.zeros(size)
@@ -87,9 +94,12 @@ p_est = p_prop*np.ones(size)
 
 # build the constants we use for solving for velocity and pressure
 p_adv_u = (density/(viscosity_dynamic*dx))*u
-p_adv_v = (density/(viscosity_dynamic*dx))*v
-p_adv_w = (density/(viscosity_dynamic*dx))*w
+p_adv_v = (density/(viscosity_dynamic*dy))*v
+p_adv_w = (density/(viscosity_dynamic*dz))*w
 
+a_t = density*dx*dy*dz/dt
 
-
+d_u = u_t*a_t
+d_v = v_t*a_t
+d_w = w_t*a_t
 
