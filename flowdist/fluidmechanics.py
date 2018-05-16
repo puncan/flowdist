@@ -13,30 +13,32 @@ class FiniteVolume(object):
     Attributes
     __________
 
-    size : length, width, and depth of the quadrahedron in [m]
-    time_step : in [s]
+    size : dx, dy, and dz as length, height, and depth of the quadrahedron in [m]
+    time_step : dt in [s]
     position : x, y, and z location in [m]
-    reference : i, j, and k as negative or positive number
+    boundary : 'top', 'bottom', 'left', 'right', 'front', 'back' of domain where up to 3 may be chosen
     velocity_estimated : u, v, and w velocities in [m/s]
     velocity : u, v, and w velocities in [m/s]
     pressure_estimated : p pressure in [Pa]
     pressure : p pressure in [Pa]
+    temperature : temp
     density : fluid density in [kg/m^3]
     viscosity : in [kg/(m*s)]
     conductivity : fluid thermal conductivity [W/(m*K)]
     """
 
-    def __init__(self, size, time_step, position, reference, velocity_estimated, velocity, pressure_estimated, pressure, density,
-                 viscosity, conductivity):
+    def __init__(self, size, time_step, position, boundary, velocity_estimated, velocity, pressure_estimated, pressure,
+                 temperature, density, viscosity, conductivity):
 
         self.size = size
         self.time_step = time_step
         self.position = position
-        self.reference = reference
+        self.boundary = boundary
         self.velocity_estimated = velocity_estimated
         self.velocity = velocity
         self.pressure_estimated = pressure_estimated
         self.pressure = pressure
+        self.temperature = temperature
         self.density = density
         self.viscosity = viscosity
         self.conductivity = conductivity
@@ -50,42 +52,35 @@ class FiniteVolume(object):
 
         a_m = self.density*self.size['dx']*self.size['dy']*self.size['dz']/self.time_step
 
-        pe_i = self.density*self.velocity_estimated['u']*self.size['dx']/self.viscosity
+        pe_i = self.density*self.velocity['u']*self.size['dx']/self.viscosity
         a_pe_i = np.max(np.array([0, 1 - (np.abs(pe_i)/2)]))
-        if self.reference['i'] > 0:
-            a_i = (self.viscosity / self.size['dx'])*a_pe_i + np.max(
-                np.array([0, -self.density*self.velocity_estimated['u']]))
-        elif self.reference['i'] < 0:
-            a_i = (self.viscosity / self.size['dx'])*a_pe_i + np.max(
-                np.array([0, self.density*self.velocity_estimated['u']]))
-        else:
-            print('FlowElement.reference must be a positive or negative number')
+        a_i_base = (self.viscosity / self.size['dx'])*a_pe_i
+        a_i_sup = self.density*self.velocity['u']
 
-        pe_j = self.density*self.velocity_estimated['v']*self.size['dy']/self.viscosity
+        pe_j = self.density*self.velocity['v']*self.size['dy']/self.viscosity
         a_pe_j = np.max(np.array([0, 1 - (np.abs(pe_j)/2)]))
-        if self.reference['j'] > 0:
-            a_j = (self.viscosity / self.size['dy'])*a_pe_j + np.max(
-                np.array([0, -self.density*self.velocity_estimated['v']]))
-        elif self.reference['j'] < 0:
-            a_j = (self.viscosity / self.size['dy'])*a_pe_j + np.max(
-                np.array([0, self.density*self.velocity_estimated['v']]))
-        else:
-            print('FlowElement.reference must be a positive or negative number')
+        a_j_base = (self.viscosity / self.size['dy'])*a_pe_j
+        a_j_sup = self.density*self.velocity['v']
 
-        pe_k = self.density*self.velocity_estimated['w']*self.size['dz']/self.viscosity
+        pe_k = self.density*self.velocity['w']*self.size['dz']/self.viscosity
         a_pe_k = np.max(np.array([0, 1 - (np.abs(pe_k)/2)]))
-        if self.reference['k'] > 0:
-            a_k = (self.viscosity / self.size['dz'])*a_pe_k + np.max(
-                np.array([0, -self.density*self.velocity_estimated['w']]))
-        elif self.reference['k'] < 0:
-            a_k = (self.viscosity / self.size['dz'])*a_pe_k + np.max(
-                np.array([0, self.density*self.velocity_estimated['w']]))
-        else:
-            print('FlowElement.reference must be a positive or negative number')
+        a_k_base = (self.viscosity / self.size['dz'])*a_pe_k
+        a_k_sup = self.density*self.velocity['w']
 
-        return [a_m, a_i, a_j, a_k]
+        return a_m, [a_i_base, a_j_base, a_k_base], [a_i_sup, a_j_sup, a_k_sup]
 
-    
+    def set_boundary_values(self, p_inlet, p_outlet):
+        """Depending on the boundary of the finite volume, the boundary conditions for fluid flow will either be a known
+        pressure or a velocity of zero in all directions"""
+
+        if 'top' or 'bottom' or 'front' or 'back' in self.boundary:
+            self.velocity = {'u': 0, 'v': 0, 'w': 0}
+
+        if 'left' in self.boundary:
+            self.pressure = p_inlet
+
+        if 'right' in self.boundary:
+            self.pressure = p_outlet
 
 
 def initial_conditions(velocity, grid):
@@ -111,4 +106,3 @@ def initial_conditions(velocity, grid):
                 return v
         except TypeError:
             return em2
-
