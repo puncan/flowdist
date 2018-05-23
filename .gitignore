@@ -203,3 +203,7 @@ venv.bak/
 
 
 # End of https://www.gitignore.io/api/linux,python,pycharm+all,microsoftoffice
+
+
+# numpy arrays
+.npy
