@@ -1,7 +1,19 @@
 import numpy as np
 from CoolProp.CoolProp import PropsSI as si
-# import matplotlib.pyplot as plt
-# import pint
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+
+fig, ax = plt.subplots()
+
+
+def animation_init():
+    line.set_ydata([np.nan] * len(surface_temperature[0, :]))
+    return line,
+
+
+def animate(i):
+    line.set_ydata(surface_temperature[i, :])
+    return line,
 
 
 def get_interface_pressure_and_velocity(guess_velocity, inlet_pressure, outlet_pressure, interface_fluid_temperature,
@@ -20,7 +32,7 @@ def get_interface_pressure_and_velocity(guess_velocity, inlet_pressure, outlet_p
     viscosity = si('V', 'T', interface_fluid_temperature, 'P', outlet_pressure, fluid)
 
     velocity = guess_velocity
-    interface_pressure = outlet_pressure
+    interface_pressure = 0
     res = 2 * tolerance
 
     while res > tolerance:
@@ -178,9 +190,8 @@ inlet_temperature = 300
 inlet_pressure = 5050000
 outlet_pressure = 5000000
 
-# the minimum and maximum heat fluxes and type of flux distribution, maybe should be a dict
-input_heat_flux = 1e6  # ([0, 1e5], 'parabolic')
-total_time_of_simulation = 5
+input_heat_flux = 5e5
+total_time_of_simulation = 30
 
 # fluid
 fluid = 'water'
@@ -188,23 +199,27 @@ fluid = 'water'
 # model parameters
 tolerance = 1e-10
 number_of_nodes = 100
-number_of_time_steps = 500
+number_of_time_steps = 100
 
 # trivial calculations from inputs
 cell_length = channel_length/number_of_nodes
 location_along_channel = np.linspace(0, channel_length, number_of_nodes)
 time_step = total_time_of_simulation/number_of_time_steps
+interval = 1000*time_step
 
 # array initializations
 fluid_temperature = np.zeros((2, number_of_nodes))
 fluid_temperature[0, :] = initial_fluid_temperature
 fluid_temperature[1, 0] = inlet_temperature
 heat_flux = input_heat_flux*np.ones(number_of_nodes)
-heat_flux[0] = 0.0
+# heat_flux[0] = 0.0
 strip_temperature = initial_fluid_temperature
 velocity = 0.1
+surface_temperature = np.zeros((number_of_time_steps + 1, number_of_nodes))
+
 
 time = 0
+j = 0
 while time < total_time_of_simulation:
     interface_pressure, velocity = get_interface_pressure_and_velocity(velocity, inlet_pressure, outlet_pressure,
                                                                        initial_fluid_temperature, channel_dimensions,
@@ -226,14 +241,17 @@ while time < total_time_of_simulation:
 
     nozzle_outlet_height = get_nozzle_outlet_height(nozzle_strip_dimensions, nozzle_outlet_height, strip_temperature)
 
-    surface_temperature = get_surface_temperature(fluid_temperature[0, :], inlet_pressure, interface_pressure, velocity,
-                                                  channel_dimensions, location_along_channel, heat_flux)
+    surface_temperature[j, :] = get_surface_temperature(fluid_temperature[0, :], inlet_pressure, interface_pressure,
+                                                        velocity, channel_dimensions, location_along_channel, heat_flux)
     time += time_step
-    print(surface_temperature[-1], fluid_temperature[0, -1], strip_temperature, velocity, nozzle_outlet_height, time)
-    # print(nozzle_outlet_height)
+    j += 1
 
-# plt.plot(location_nodes, temperature_fluid)
+line, = ax.plot(location_along_channel, surface_temperature[0, :], color='black')
+ax.set(xlim=(0, channel_length), ylim=(np.amin(surface_temperature[1:-1, :]) - 5, np.amax(surface_temperature) + 5))
+ax.set_xlabel('Distance Along Channel (m)')
+ax.set_ylabel('Channel Surface Temperature (K)')
+ax.grid(True)
+ani = animation.FuncAnimation(fig, animate, frames=number_of_time_steps, init_func=animation_init, interval=interval,
+                              blit=True)
 
-#ani = animation.FuncAnimation(fig=fig, func=animate, init_func=init, interval=25, blit=True)
-#plt.ylim([295, 480])
-# plt.show()"""
+plt.show()
