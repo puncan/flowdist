@@ -1,0 +1,38 @@
+# channel_dimensions
+channel_length: 0.1
+channel_height: 1e-3
+channel_width: 2e-3
+channel_roughness: 2e-6
+
+# nozzle and bimetallic strip parameters
+dead_state_nozzle_outlet_height: 8e-4
+strip_length: 1e-3
+strip_thickness: 0.25e-3
+strip_coefficient: 18e-6
+dead_state_strip_temperature: 310
+strip_density: 8330.0
+strip_heat_capacity: 439.4
+
+# initial condition
+initial_fluid_temperature: 300
+
+# boundary conditions
+inlet_temperature: 300
+inlet_pressure: 5.05e6
+outlet_pressure: 5e6
+input_heat_flux: 6e6
+
+# heat transfer fluid
+fluid: 'water'
+
+# simulation details
+total_time_of_simulation: 180
+number_of_time_steps: 600
+number_of_nodes: 50
+tolerance: 1e-10
+
+# initial guess for iterative solver
+velocity: 0.1
+
+
+
